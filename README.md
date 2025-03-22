@@ -8,7 +8,7 @@
   <img src="https://img.shields.io/badge/JavaScript-ES6-yellow.svg" alt="JavaScript">
   <img src="https://img.shields.io/badge/Status-Active-brightgreen.svg" alt="Project Status">
   <br><br>
-  <img src="https://i.ibb.co/67rXdmRg/image.png" alt="Instagram Spam Checker Banner">
+  <img src="insta.png" alt="Instagram Spam Checker Banner">
 </p>
 
 ---

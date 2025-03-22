@@ -8,7 +8,7 @@
   <img src="https://img.shields.io/badge/JavaScript-ES6-yellow.svg" alt="JavaScript">
   <img src="https://img.shields.io/badge/Status-Active-brightgreen.svg" alt="Project Status">
   <br><br>
-  <img src="https://your-image-link.com/banner.png" alt="Instagram Spam Checker Banner" width="80%">
+  <img src="https://i.ibb.co/67rXdmRg/image.png" alt="Instagram Spam Checker Banner" width="80%">
 </p>
 
 ---
@@ -23,7 +23,7 @@
 ---
 
 ## 🌍 Live Demo  
-🔗 **Try it now:** [https://yourwebsite.com](https://yourwebsite.com)  
+🔗 **Try it now:** [Check Website](https://sundaretion.github.io/instagram-spam-checker/)  
 
 <p align="center">
   <img src="https://your-image-link.com/demo.gif" alt="Website Demo" width="70%">
@@ -31,10 +31,4 @@
 
 ---
 
-## 🛠 Installation (For Developers)  
-If you want to run this project locally, follow these steps:  
 
-### 1️⃣ Clone the Repository  
-```bash
-git clone https://github.com/yourusername/instagram-spam-checker.git  
-cd instagram-spam-checker

@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Enhanced IG Spam Filter Checker & Follower Count Tool with multi-language support (English and Hindi), PWA capabilities, offline caching, advanced animations, download options, and improved accessibility.">
+  <title>IG Spam Filter Checker & Follower Count</title>
+  <!-- Import Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <!-- FontAwesome for Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+  <style>
+  
+  </style>
+</head>
+<body>
+  <!-- Watermark overlay -->
+  <div class="watermark"></div>
+  
+  <!-- Instruction Modal -->
+  <div id="instructionModal" class="modal">
+    <div class="modal-content">
+      <h3 id="modalTitle">How to Use</h3>
+      <p id="modalText">Enter an Instagram username or link to check the spam filter status and view follower data along with recent posts.</p>
+      <button id="closeModal" class="option-btn modal-close">Got it!</button>
+    </div>
+  </div>
+  
+  <div class="u-tools_container">
+    <h3 id="headerTitle">IG Spam Filter Checker & Follower Count</h3>
+    <!-- Language Selector -->
+    <select id="languageSelect">
+      <option value="en">English</option>
+      <option value="ta">தமிழ்</option>
+
+    </select>
+    <!-- Dark Mode Toggle -->
+    <button id="toggleTheme" class="option-btn" title="Toggle Dark/Light Mode">
+      <i class="fas fa-adjust"></i> Toggle Theme
+    </button>
+    <!-- Copy, Download & Reset Options -->
+    <div class="options-panel">
+      <button id="copyResult" class="option-btn" title="Copy Results">
+        <i class="fas fa-copy"></i> Copy
+      </button>
+      <button id="downloadResult" class="option-btn" title="Download Results">
+        <i class="fas fa-download"></i> Download
+      </button>
+      <button id="resetForm" class="option-btn" title="Reset Form">
+        <i class="fas fa-redo"></i> Reset
+      </button>
+    </div>
+    <!-- Form for Username Input -->
+    <form id="userForm">
+      <label for="usernameInput" class="visually-hidden">Enter Username or Link</label>
+      <input type="text" id="usernameInput" placeholder="Enter Username or Link" aria-label="Instagram Username or Link" required>
+      <span class="tooltip" id="inputTooltip">e.g., @username or a profile URL</span>
+      <button type="submit">Get Info</button>
+    </form>
+    <br>
+    <div id="error" class="error" role="alert" aria-live="assertive"></div>
+    <!-- Spinner for loading state -->
+    <div id="spinner" class="spinner" aria-live="polite"></div>
+    <div id="resultBox" class="result" aria-live="polite">
+      <img id="profileImage" class="profile-image" src="" alt="Profile Image" style="display: none;">
+      <p><strong id="nameLabel">Name:</strong> <span id="resultName">Not available</span></p>
+      <p><strong id="usernameLabel">Username:</strong> <span id="resultUsername">Unknown</span></p>
+      <p><strong id="followersLabel">Follower Count:</strong> <span id="resultFollowers">Unknown</span></p>
+      <p><strong id="followingsLabel">Following Count:</strong> <span id="resultFollowings">Unknown</span></p>
+      <p><strong id="postsLabel">Posts Count:</strong> <span id="resultPosts">Unknown</span></p>
+      <p><strong id="statusLabel">Account Status:</strong> <span id="resultStatus">Unknown</span></p>
+      <p><strong id="spamLabel">Spam Filter:</strong> <span id="resultSpamSetting">Disabled</span></p>
+      <p id="resultMessage"></p>
+      <!-- Container for recent posts -->
+      <div id="postsContainer" class="posts-container" style="display: none;"></div>
+    </div>
+  </div>
+
+  <!-- WhatsApp Icon for quick contact -->
+ 
+  
+  <!-- Notification Toast -->
+  <div id="notification" class="notification">Results copied to clipboard!</div>
+
+  <script>
+    /******************** Security Measures ********************/
+    document.addEventListener('contextmenu', event => event.preventDefault());
+    window.addEventListener('keydown', function(e) {
+      if (e.keyCode === 123 ||
+         (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 67 || e.keyCode === 74)) ||
+         (e.ctrlKey && e.keyCode === 85)) {
+        e.preventDefault();
+        return false;
+      }
+    });
+    console.log("%cWarning!", "color: red; font-size: 24px; font-weight: bold;");
+    console.log("This code is proprietary. Unauthorized copying is prohibited.");
+
+    /******************** Theme Toggle with Persistence ********************/
+    const toggleThemeBtn = document.getElementById('toggleTheme');
+    function setTheme(theme) {
+      if (theme === 'dark') {
+        document.body.classList.add('dark-mode');
+        localStorage.setItem('theme', 'dark');
+      } else {
+        document.body.classList.remove('dark-mode');
+        localStorage.setItem('theme', 'light');
+      }
+    }
+    toggleThemeBtn.addEventListener('click', () => {
+      document.body.classList.contains('dark-mode')
+        ? setTheme('light')
+        : setTheme('dark');
+    });
+    if (localStorage.getItem('theme') === 'dark') {
+      setTheme('dark');
+    }
+
+    /******************** Language Selector ********************/
+    const languageSelect = document.getElementById('languageSelect');
+    const translations = {
+      en: {
+        headerTitle: "IG Spam Filter Checker & Follower Count",
+        modalTitle: "How to Use",
+        modalText: "Enter an Instagram username or link to check the spam filter status and view follower data along with recent posts.",
+        nameLabel: "Name:",
+        usernameLabel: "Username:",
+        followersLabel: "Follower Count:",
+        followingsLabel: "Following Count:",
+        postsLabel: "Posts Count:",
+        statusLabel: "Account Status:",
+        spamLabel: "Spam Filter:",
+        tooltip: "e.g., @username or a profile URL"
+      },
+      ta: {
+        headerTitle: "ஐஜி ஸ்பாம் வடிப்பான் செக்கர் மற்றும் பின்தொடர்பவர்களின் எண்ணிக்கை",
+        modalTitle: "எப்படி பயன்படுத்து",
+        modalText: "நீங்கள் ஸ்பாம் வடிப்பான் நிலையை சரிபார்க்க மற்றும் சமீபத்திய பதிவுகளுடன் பின்தொடர்பவர் தரவைக் காண ஒரு இன்ஸ்டாகிராம் பயனர் பெயர் அல்லது இணைப்பை உள்ளிடவும்.",
+        nameLabel: "பெயர்:",
+        usernameLabel: "பயனர் பெயர்:",
+        followersLabel: "பின்தொடர்பவர்கள் எண்ணிக்கை:",
+        followingsLabel: "பின்தொடரும் எண்ணிக்கை:",
+        postsLabel: "பதிவுகள் எண்ணிக்கை:",
+        statusLabel: "கணக்கு நிலை:",
+        spamLabel: "ஸ்பாம் வடிப்பான்:",
+        tooltip: "உதாரணம்: @username அல்லது ஒரு சுயவிவர URL"
+      }
+    };
+
+    function updateLanguage(lang) {
+      const texts = translations[lang];
+      document.getElementById('headerTitle').innerText = texts.headerTitle;
+      document.getElementById('modalTitle').innerText = texts.modalTitle;
+      document.getElementById('modalText').innerText = texts.modalText;
+      document.getElementById('nameLabel').innerText = texts.nameLabel;
+      document.getElementById('usernameLabel').innerText = texts.usernameLabel;
+      document.getElementById('followersLabel').innerText = texts.followersLabel;
+      document.getElementById('followingsLabel').innerText = texts.followingsLabel;
+      document.getElementById('postsLabel').innerText = texts.postsLabel;
+      document.getElementById('statusLabel').innerText = texts.statusLabel;
+      document.getElementById('spamLabel').innerText = texts.spamLabel;
+      document.getElementById('inputTooltip').innerText = texts.tooltip;
+    }
+    languageSelect.addEventListener('change', (e) => {
+      updateLanguage(e.target.value);
+    });
+    updateLanguage(languageSelect.value);
+
+    /******************** Copy, Download & Reset Options ********************/
+    document.getElementById('copyResult').addEventListener('click', async () => {
+      const resultBox = document.getElementById('resultBox');
+      const notification = document.getElementById('notification');
+      const textToCopy = resultBox.innerText.trim();
+      if (textToCopy) {
+        try {
+          if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(textToCopy);
+          } else {
+            const textArea = document.createElement('textarea');
+            textArea.value = textToCopy;
+            textArea.style.position = 'fixed';
+            textArea.style.top = '-9999px';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+          }
+          notification.classList.add('show');
+          setTimeout(() => notification.classList.remove('show'), 2000);
+        } catch (err) {
+          console.error('Failed to copy: ', err);
+        }
+      } else {
+        alert('No results to copy.');
+      }
+    });
+    document.getElementById('downloadResult').addEventListener('click', () => {
+      const resultBox = document.getElementById('resultBox');
+      const text = resultBox.innerText.trim();
+      if (text) {
+        const blob = new Blob([text], {type: 'text/plain'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = "IG_Result.txt";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      } else {
+        alert('No results to download.');
+      }
+    });
+    document.getElementById('resetForm').addEventListener('click', () => {
+      document.getElementById('userForm').reset();
+      document.getElementById('resultBox').style.display = 'none';
+      document.getElementById('error').style.display = 'none';
+    });
+
+    /******************** Modal for Instructions ********************/
+    const instructionModal = document.getElementById('instructionModal');
+    const closeModal = document.getElementById('closeModal');
+    window.addEventListener('load', () => {
+      if (!localStorage.getItem('modalShown')) {
+        instructionModal.classList.add('show');
+      }
+    });
+    closeModal.addEventListener('click', () => {
+      instructionModal.classList.remove('show');
+      localStorage.setItem('modalShown', 'true');
+    });
+
+    /******************** Main API Fetch Functionality & Caching ********************/
+    const apiKey = "2adc0cf1cdmsh5f2960e0a585c76p1bc9f4jsn50d471406dde";
+    const API_HOST = "instagram-scraper-api2.p.rapidapi.com";
+    document.getElementById('userForm').addEventListener('submit', function(event) {
+      event.preventDefault();
+      fetchUserInfo();
+    });
+    async function fetchUserInfo() {
+      const username = document.getElementById('usernameInput').value.trim();
+      const errorBox = document.getElementById('error');
+      const spinner = document.getElementById('spinner');
+      const resultBox = document.getElementById('resultBox');
+      const resultName = document.getElementById('resultName');
+      const resultUsername = document.getElementById('resultUsername');
+      const resultFollowers = document.getElementById('resultFollowers');
+      const resultFollowings = document.getElementById('resultFollowings');
+      const resultPosts = document.getElementById('resultPosts');
+      const resultStatus = document.getElementById('resultStatus');
+      const resultSpamSetting = document.getElementById('resultSpamSetting');
+      const resultMessage = document.getElementById('resultMessage');
+      const profileImage = document.getElementById('profileImage');
+      const postsContainer = document.getElementById('postsContainer');
+
+      errorBox.style.display = 'none';
+      errorBox.classList.remove('show');
+      resultBox.style.display = 'none';
+      resultBox.classList.remove('green', 'red');
+      resultMessage.textContent = '';
+      postsContainer.innerHTML = '';
+      postsContainer.style.display = 'none';
+      spinner.style.display = 'block';
+
+      if (!username) {
+        showError("Please enter a username or link.");
+        spinner.style.display = 'none';
+        return;
+      }
+
+      // Check local cache first
+      const cached = localStorage.getItem(username);
+      if (cached) {
+        spinner.style.display = 'none';
+        populateResult(JSON.parse(cached));
+        return;
+      }
+
+      try {
+        const response = await fetch(`https://${API_HOST}/v1/info?username_or_id_or_url=${encodeURIComponent(username)}`, {
+          method: 'GET',
+          headers: {
+            'x-rapidapi-key': apiKey,
+            'x-rapidapi-host': API_HOST
+          }
+        });
+        spinner.style.display = 'none';
+        if (response.status === 403) throw new Error("Private account");
+        if (response.status === 404) throw new Error("Account not found");
+        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+        const data = await response.json();
+        if (data && data.data) {
+          localStorage.setItem(username, JSON.stringify(data.data));
+          populateResult(data.data);
+        } else {
+          throw new Error("Unexpected response format.");
+        }
+      } catch (error) {
+        spinner.style.display = 'none';
+        showError(error.message || 'An error occurred.');
+      }
+    }
+    function populateResult(data) {
+      const resultBox = document.getElementById('resultBox');
+      document.getElementById('resultName').textContent = data.full_name || 'Not available';
+      document.getElementById('resultUsername').textContent = data.username || 'Unknown';
+      document.getElementById('resultFollowers').textContent = data.follower_count || 'Unknown';
+      document.getElementById('resultFollowings').textContent = data.following_count || 'Unknown';
+      document.getElementById('resultPosts').textContent = data.posts_count || 'Unknown';
+      document.getElementById('resultStatus').textContent = data.is_private ? 'Private' : 'Public';
+      document.getElementById('resultSpamSetting').textContent = data.spam_follower_setting_enabled ? 'Enabled' : 'Disabled';
+      if (data.spam_follower_setting_enabled) {
+        document.getElementById('resultMessage').innerHTML = 'Spam Filter is enabled. Please turn it off or contact via Telegram: <a href="https://t.me/sundaretion" target="_blank" style="color: var(--success-text);">Sundaresan</a>';
+        resultBox.classList.add('red');
+      } else {
+        document.getElementById('resultMessage').textContent = 'Spam Filter is disabled. You are able to order.';
+        resultBox.classList.add('green');
+      }
+      const profileImage = document.getElementById('profileImage');
+      if (data.profile_picture) {
+        profileImage.src = data.profile_picture;
+        profileImage.alt = `${data.username}'s profile picture`;
+        profileImage.style.display = 'block';
+      } else {
+        profileImage.style.display = 'none';
+      }
+      const postsContainer = document.getElementById('postsContainer');
+      if (data.posts && Array.isArray(data.posts) && data.posts.length > 0) {
+        postsContainer.style.display = 'grid';
+        postsContainer.innerHTML = '<h4>Recent Posts</h4>';
+        data.posts.forEach(post => {
+          let postLink = post.post_url || '#';
+          let imgSrc = post.image_url || '';
+          if (imgSrc) {
+            postsContainer.innerHTML += `<a href="${postLink}" target="_blank"><img src="${imgSrc}" alt="Post image"></a>`;
+          }
+        });
+      }
+      resultBox.style.display = 'block';
+    }
+    function showError(message) {
+      const errorBox = document.getElementById('error');
+      errorBox.textContent = message;
+      errorBox.style.display = 'block';
+      errorBox.classList.add('show');
+    }
+    document.getElementById('usernameInput').addEventListener('input', () => {
+      const errorBox = document.getElementById('error');
+      errorBox.style.display = 'none';
+      errorBox.classList.remove('show');
+    });
+
+    /******************** Service Worker Registration for PWA Support ********************/
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('service-worker.js')
+          .then(registration => {
+            console.log('Service Worker registered with scope:', registration.scope);
+          })
+          .catch(err => {
+            console.error('Service Worker registration failed:', err);
+          });
+      });
+    }
+    document.addEventListener("DOMContentLoaded", function () {
+    const modal = document.getElementById("instructionModal");
+    const closeModal = document.getElementById("closeModal");
+
+    // Function to open modal
+    function openModal() {
+        modal.classList.add("show");
+    }
+
+    // Function to close modal
+    function closeModalFunc() {
+        modal.classList.remove("show");
+    }
+
+    // Close modal when clicking the close button
+    closeModal.addEventListener("click", closeModalFunc);
+
+    // Close modal when clicking outside of it
+    window.addEventListener("click", function (event) {
+        if (event.target === modal) {
+            closeModalFunc();
+        }
+    });
+
+    // Example: Open modal when page loads (optional)
+    setTimeout(openModal, 1000); // Opens after 1 sec
+});
+
+  </script>
+</body>
+</html>

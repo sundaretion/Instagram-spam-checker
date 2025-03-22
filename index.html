@@ -16,6 +16,9 @@
   </style>
 </head>
 <body>
+      <div class="preloader" id="preloader">
+        <div class="spinner"></div>
+    </div>
   <!-- Watermark overlay -->
   <div class="watermark"></div>
   
@@ -392,7 +395,11 @@
     // Example: Open modal when page loads (optional)
     setTimeout(openModal, 1000); // Opens after 1 sec
 });
-
+  // Hide preloader and show content when the page fully loads
+        window.addEventListener("load", function() {
+            document.getElementById("preloader").classList.add("hide");
+            document.getElementById("content").style.display = "block";
+        });
   </script>
 </body>
 </html>
